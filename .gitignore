@@ -1,5 +1,4 @@
 # Environment files — never commit these
-frontend/src/firebase.js
 .env
 .env.local
 .env.production
