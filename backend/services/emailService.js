@@ -16,9 +16,9 @@ const transporter = nodemailer.createTransport({
 // 2. Verify connection on startup
 transporter.verify((error, success) => {
   if (error) {
-    console.error("🔴 Email Transporter Error:", error);
+    console.error("Email Transporter Error:", error);
   } else {
-    console.log("🟢 Email Transporter Ready");
+    console.log("Email Transporter Ready");
   }
 });
 
@@ -37,7 +37,6 @@ export const sendReportEmail = async (targetEmail, reportData, atsScore) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[Email Service] Report sent successfully to ${targetEmail}. ID: ${info.messageId}`);
     
     return { success: true, messageId: info.messageId };
   } catch (error) {

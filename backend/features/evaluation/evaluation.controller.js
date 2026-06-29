@@ -2,9 +2,6 @@ import * as EvaluationService from './evaluation.service.js';
 
 export const evaluateTargetResume = async (req, res) => {
   try {
-    console.log("\n======================================");
-    console.log("📥 Request successfully reached the controller!");
-    
     const { jobDescription, userId, email } = req.body; 
 
     if (!req.file || !jobDescription || !userId) {
@@ -16,7 +13,7 @@ export const evaluateTargetResume = async (req, res) => {
     const result = await EvaluationService.processEvaluation(req.file.buffer, jobDescription, userId);
 
     if (!result.success && result.isAiRejection) {
-      console.log("🛑 AI rejected document:", result.message);
+      
       return res.status(400).json({ success: false, message: result.message || "Document rejected." });
     }
 

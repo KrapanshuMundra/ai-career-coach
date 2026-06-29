@@ -42,7 +42,5 @@ export const registerNewUser = async (userId, email, password) => {
     { email: email, password: hashedPassword },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
-
-  console.log(`👤 New identity footprint logged into users collection matching ID: ${userId}`);
   return profile;
 };

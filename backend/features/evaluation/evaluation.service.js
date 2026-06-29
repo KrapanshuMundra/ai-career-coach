@@ -11,17 +11,13 @@ export const syncUserEmail = async (userId, email) => {
       { email: email },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
-    console.log(`👤 User profile synced for ID: ${userId}`);
   } catch (dbError) {
     console.error("⚠️ Database User Sync Error:", dbError.message);
   }
 };
 
 export const processEvaluation = async (fileBuffer, jobDescription, userId) => {
-  console.log("📄 Parsing PDF document...");
   const resumeText = await parsePdf(fileBuffer);
-
-  console.log("🧠 Sending to AI for evaluation...");
   let rawAiResponse = await evaluateResume(resumeText, jobDescription);
   let aiResult;
   
@@ -36,8 +32,6 @@ export const processEvaluation = async (fileBuffer, jobDescription, userId) => {
   if (aiResult.isValid === false) {
     return { success: false, isAiRejection: true, message: aiResult.error };
   }
-
-  console.log("💾 Saving Evaluation to MongoDB...");
   const newEvaluation = new Evaluation({
     userId: userId, 
     jobDescription: jobDescription,
@@ -46,8 +40,6 @@ export const processEvaluation = async (fileBuffer, jobDescription, userId) => {
   });
   
   await newEvaluation.save();
-  console.log("✅ Evaluation metrics committed safely!");
-
   return { success: true, data: aiResult };
 };
 

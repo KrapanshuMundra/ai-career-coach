@@ -5,15 +5,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function FeedbackForm() {
   const { currentUser } = useAuth();
-  
-  // Modal visibility state
+
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Form states
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState('');
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +34,7 @@ export default function FeedbackForm() {
         rating: rating,
         comment: comment
       });
-      
+
       setIsSubmitted(true);
     } catch (err) {
       setError("Failed to submit feedback. Please try again.");
@@ -46,10 +42,8 @@ export default function FeedbackForm() {
     }
   };
 
-  // Reset form when modal closes
   const handleClose = () => {
     setIsOpen(false);
-    // Wait for the exit animation before resetting the state
     setTimeout(() => {
       setIsSubmitted(false);
       setRating(0);
@@ -60,18 +54,16 @@ export default function FeedbackForm() {
 
   return (
     <>
-      {/* 🚀 1. The Floating Action Button (Always visible on screen) */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 z-40 flex items-center gap-2 px-5 py-3.5 bg-[#6A0DAD] text-white rounded-full shadow-[0_8px_20px_rgba(106,13,173,0.3)] font-bold text-sm hover:bg-[#580b94] transition-colors"
+        className="fixed bottom-8 right-8 z-40 flex items-center gap-2 px-5 py-3.5 bg-[#6A0DAD] text-white rounded-full shadow-[0_8px_20px_rgba(106,13,173,0.3)] font-bold text-sm hover:bg-[#580b94] dark:bg-purple-600 dark:hover:bg-purple-700 transition-colors"
       >
         <span className="material-symbols-outlined text-[20px]">rate_review</span>
         Give Feedback
       </motion.button>
 
-      {/* 🚀 2. The Pop-up Modal */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -80,55 +72,50 @@ export default function FeedbackForm() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           >
-            {/* Modal Container */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl font-['Inter',sans-serif] overflow-hidden"
+              className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl dark:shadow-none border border-transparent dark:border-zinc-800 font-['Inter',sans-serif] overflow-hidden transition-colors duration-300"
             >
-              {/* Close Button */}
-              <button 
+              <button
                 onClick={handleClose}
-                className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-full transition-colors z-10"
+                className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-500 dark:text-zinc-400 rounded-full transition-colors z-10"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
 
               <div className="p-8">
-                {/* ---------- SUCCESS STATE ---------- */}
                 {isSubmitted ? (
                   <div className="text-center flex flex-col items-center justify-center min-h-[300px]">
-                    <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 bg-green-50 dark:bg-green-500/10 text-green-500 dark:text-green-400 rounded-full flex items-center justify-center mb-4">
                       <span className="material-symbols-outlined text-4xl">check_circle</span>
                     </div>
-                    <h3 className="text-xl font-black text-black mb-2">Thank You!</h3>
-                    <p className="text-sm text-gray-500 font-medium mb-8">
+                    <h3 className="text-xl font-black text-black dark:text-white mb-2">Thank You!</h3>
+                    <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium mb-8">
                       Your feedback helps us make CareerCoach better for everyone.
                     </p>
-                    <button 
+                    <button
                       onClick={handleClose}
-                      className="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all text-sm"
+                      className="w-full py-3.5 rounded-xl font-bold text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all text-sm"
                     >
                       Close Window
                     </button>
                   </div>
                 ) : (
-                  /* ---------- ACTIVE FORM STATE ---------- */
                   <>
                     <div className="text-center mb-6">
-                      <h3 className="text-2xl font-black text-black tracking-tight">Rate your experience</h3>
-                      <p className="text-sm text-gray-500 font-medium mt-1">How was your mock interview session?</p>
+                      <h3 className="text-2xl font-black text-black dark:text-white tracking-tight">Rate your experience</h3>
+                      <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium mt-1">How was your mock interview session?</p>
                     </div>
 
                     {error && (
-                      <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-bold rounded-xl text-center">
+                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl text-center">
                         {error}
                       </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                      {/* Interactive Star Rating */}
                       <div className="flex justify-center gap-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
@@ -139,9 +126,9 @@ export default function FeedbackForm() {
                             onMouseEnter={() => setHover(star)}
                             onMouseLeave={() => setHover(rating)}
                           >
-                            <span 
+                            <span
                               className={`material-symbols-outlined text-4xl transition-colors ${
-                                star <= (hover || rating) ? "text-[#FFC53D]" : "text-gray-200"
+                                star <= (hover || rating) ? "text-[#FFC53D]" : "text-gray-200 dark:text-zinc-700"
                               }`}
                               style={{ fontVariationSettings: star <= (hover || rating) ? "'FILL' 1" : "'FILL' 0" }}
                             >
@@ -151,25 +138,23 @@ export default function FeedbackForm() {
                         ))}
                       </div>
 
-                      {/* Text Area */}
                       <div className="relative">
                         <textarea
                           value={comment}
                           onChange={(e) => setComment(e.target.value)}
                           placeholder="Tell us what you loved, or what we can improve..."
-                          className="w-full h-32 p-4 rounded-2xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all resize-none custom-scrollbar"
+                          className="w-full h-32 p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all resize-none custom-scrollbar"
                           maxLength={500}
                         />
-                        <div className="absolute bottom-3 right-4 text-[10px] font-bold text-gray-400">
+                        <div className="absolute bottom-3 right-4 text-[10px] font-bold text-gray-400 dark:text-zinc-500">
                           {comment.length}/500
                         </div>
                       </div>
 
-                      {/* Submit Button */}
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-3.5 rounded-xl font-bold text-white bg-[#6A0DAD] hover:bg-[#580b94] transition-all shadow-md active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2 text-sm"
+                        className="w-full py-3.5 rounded-xl font-bold text-white bg-[#6A0DAD] hover:bg-[#580b94] dark:bg-purple-600 dark:hover:bg-purple-700 transition-all shadow-md active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2 text-sm"
                       >
                         {isSubmitting ? (
                           <>
