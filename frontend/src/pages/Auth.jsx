@@ -24,9 +24,11 @@ export default function Auth() {
   const validationSchema = Yup.object().shape({
     email: Yup.string()
       .email("Please enter a valid email address")
+      .max(30, "Email must be at most 30 characters")
       .required("Email is required"),
     password: Yup.string()
       .min(6, "Password must be at least 6 characters")
+      .max(8, "Password must be at most 8 characters")
       .required("Password is required"),
     confirmPassword: isLogin
       ? Yup.string()
@@ -195,6 +197,7 @@ export default function Auth() {
                           <Field
                             type="email"
                             name="email"
+                            maxLength={30}
                             className="w-full p-3 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
                             placeholder="name@example.com"
                           />
@@ -213,6 +216,7 @@ export default function Auth() {
                             <Field
                               type={showPassword ? "text" : "password"}
                               name="password"
+                              maxLength={8}
                               className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
                               placeholder="Enter your password"
                             />
@@ -243,6 +247,7 @@ export default function Auth() {
                               <Field
                                 type={showPassword ? "text" : "password"}
                                 name="confirmPassword"
+                                maxLength={8}
                                 className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
                                 placeholder="Confirm your password"
                               />
