@@ -480,7 +480,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.6, duration: 0.4 }}
-                className="absolute top-10 sm:top-20 left-[-10px] sm:left-[-20px] bg-white dark:bg-zinc-900 p-3 sm:p-4 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-zinc-800 flex items-start gap-2 sm:gap-3 max-w-[180px] sm:max-w-[250px] will-change-transform"
+                className="absolute top-10 sm:top-20 left-0 sm:left-[-20px] bg-white dark:bg-zinc-900 p-3 sm:p-4 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-zinc-800 flex items-start gap-2 sm:gap-3 max-w-[180px] sm:max-w-[250px] will-change-transform"
               >
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center shrink-0 mt-0.5">
                   <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-[16px] sm:text-[18px]">check_circle</span>
