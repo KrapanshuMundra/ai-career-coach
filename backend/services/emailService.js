@@ -6,11 +6,14 @@ dotenv.config();
 
 // 1. Initialize the Transporter
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE,
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // STARTTLS, not SSL
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 15000,
 });
 
 // 2. Verify connection on startup
