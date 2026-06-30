@@ -2,17 +2,13 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import api from "../utils/api";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-
-  // Form States
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, signup } = useAuth();
@@ -21,43 +17,47 @@ export default function Auth() {
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     setError("");
-    setPassword("");
-    setPasswordConfirm("");
     setShowPassword(false);
   };
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  // Validation schema — confirmPassword only required when signing up
+  const validationSchema = Yup.object().shape({
+    email: Yup.string()
+      .email("Please enter a valid email address")
+      .required("Email is required"),
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Password is required"),
+    confirmPassword: isLogin
+      ? Yup.string()
+      : Yup.string()
+          .oneOf([Yup.ref("password")], "Passwords do not match")
+          .required("Please confirm your password"),
+  });
 
-    if (!isLogin && password !== passwordConfirm) {
-      return setError("Passwords do not match");
-    }
-
+  async function handleFormSubmit(values, { setSubmitting }) {
     try {
       setError("");
-      setLoading(true);
 
       // =========================================
       // FLOW 1: STANDARD LOGIN
       // =========================================
       if (isLogin) {
-        await login(email, password);
+        await login(values.email, values.password);
         navigate("/evaluator");
       }
       // =========================================
       // FLOW 2: SIGNUP - DIRECT (NO OTP)
       // =========================================
       else {
-        // 1. Create Firebase Account
-        const userCredential = await signup(email, password);
+        const userCredential = await signup(values.email, values.password);
         const userId = userCredential?.user?.uid;
 
-        // 2. Sync with MongoDB
         if (userId) {
           await api.post("/api/auth/register", {
             userId,
-            email,
-            password,
+            email: values.email,
+            password: values.password,
           });
         }
         navigate("/evaluator");
@@ -69,7 +69,7 @@ export default function Auth() {
         setError(err.response?.data?.message || "Failed to create account. Please try again.");
       }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
@@ -180,78 +180,105 @@ export default function Auth() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <Formik
+                  initialValues={{ email: "", password: "", confirmPassword: "" }}
+                  validationSchema={validationSchema}
+                  onSubmit={handleFormSubmit}
+                  enableReinitialize
+                >
+                  {({ isSubmitting }) => (
+                    <Form className="space-y-4" noValidate>
 
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                    <div>
-                      <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase transition-colors duration-300">Email</label>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full p-3 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
-                        placeholder="name@example.com"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="relative flex items-center">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
-                          placeholder="Enter your password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 text-gray-400 dark:text-zinc-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors flex items-center justify-center focus:outline-none"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {showPassword ? "visibility" : "visibility_off"}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {!isLogin && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                        <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase mt-4 transition-colors duration-300">Confirm Password</label>
-                        <div className="relative flex items-center">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            required
-                            value={passwordConfirm}
-                            onChange={(e) => setPasswordConfirm(e.target.value)}
-                            className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
-                            placeholder="Confirm your password"
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                        <div>
+                          <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase transition-colors duration-300">Email</label>
+                          <Field
+                            type="email"
+                            name="email"
+                            className="w-full p-3 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
+                            placeholder="name@example.com"
                           />
+                          <ErrorMessage name="email">
+                            {(msg) => (
+                              <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px]">error</span>
+                                {msg}
+                              </p>
+                            )}
+                          </ErrorMessage>
                         </div>
-                      </motion.div>
-                    )}
-                  </motion.div>
 
-                  <button
-                    disabled={loading}
-                    type="submit"
-                    className="w-full py-3.5 mt-4 rounded-xl font-bold text-white bg-[#6A0DAD] hover:bg-[#580b94] dark:bg-purple-600 dark:hover:bg-purple-700 transition-all shadow-md active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2 text-sm"
-                  >
-                    {loading ? (
-                      <>
-                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Processing...
-                      </>
-                    ) : (
-                      isLogin ? "Sign In" : "Create Account"
-                    )}
-                  </button>
-                </form>
+                        <div>
+                          <div className="relative flex items-center">
+                            <Field
+                              type={showPassword ? "text" : "password"}
+                              name="password"
+                              className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
+                              placeholder="Enter your password"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 text-gray-400 dark:text-zinc-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors flex items-center justify-center focus:outline-none"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">
+                                {showPassword ? "visibility" : "visibility_off"}
+                              </span>
+                            </button>
+                          </div>
+                          <ErrorMessage name="password">
+                            {(msg) => (
+                              <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px]">error</span>
+                                {msg}
+                              </p>
+                            )}
+                          </ErrorMessage>
+                        </div>
+
+                        {!isLogin && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                            <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase mt-4 transition-colors duration-300">Confirm Password</label>
+                            <div className="relative flex items-center">
+                              <Field
+                                type={showPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
+                                placeholder="Confirm your password"
+                              />
+                            </div>
+                            <ErrorMessage name="confirmPassword">
+                              {(msg) => (
+                                <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[14px]">error</span>
+                                  {msg}
+                                </p>
+                              )}
+                            </ErrorMessage>
+                          </motion.div>
+                        )}
+                      </motion.div>
+
+                      <button
+                        disabled={isSubmitting}
+                        type="submit"
+                        className="w-full py-3.5 mt-4 rounded-xl font-bold text-white bg-[#6A0DAD] hover:bg-[#580b94] dark:bg-purple-600 dark:hover:bg-purple-700 transition-all shadow-md active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2 text-sm"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing...
+                          </>
+                        ) : (
+                          isLogin ? "Sign In" : "Create Account"
+                        )}
+                      </button>
+                    </Form>
+                  )}
+                </Formik>
               </motion.div>
             </AnimatePresence>
 
