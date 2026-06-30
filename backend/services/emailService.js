@@ -1,57 +1,46 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 import { generateInterviewReportTemplate } from '../templates/emailTemplates.js';
 
 dotenv.config();
 
-// 1. Initialize the Transporter
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  connectionTimeout: 15000,
-  family: 4, // Force IPv4, avoids Render's broken IPv6 routing
-});
+// 1. Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// 2. Verify connection on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Email Transporter Error:", error);
-  } else {
-    console.log("Email Transporter Ready");
-  }
-});
+// NOTE: 'onboarding@resend.dev' only works for sending to your own
+// Resend account email. Once you verify a custom domain in Resend,
+// replace this with something like 'noreply@yourdomain.com' so you
+// can send to any user.
+const FROM_ADDRESS = 'CareerCoach <onboarding@resend.dev>';
 
-// 3. Execution Function
-// Add atsScore as the third parameter
+// 2. Execution Function
 export const sendReportEmail = async (targetEmail, reportData, atsScore) => {
   try {
-    // Pass atsScore into the template function
     const htmlContent = generateInterviewReportTemplate(reportData, atsScore);
 
-    const mailOptions = {
-      from: `"CareerCoach AI" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: FROM_ADDRESS,
       to: targetEmail,
       subject: `Your Career Readiness Score: ${reportData.overallScore}/100 🚀`,
       html: htmlContent,
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    
-    return { success: true, messageId: info.messageId };
+    if (error) {
+      console.error("[Email Service] Failed to send report:", error);
+      throw new Error("Failed to dispatch email notification.");
+    }
+
+    return { success: true, messageId: data.id };
   } catch (error) {
     console.error("[Email Service] Failed to send report:", error);
     throw new Error("Failed to dispatch email notification.");
   }
 };
+
 export const sendOTPEmail = async (targetEmail, otp) => {
   try {
-    const mailOptions = {
-      from: `"CareerCoach Security" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: 'CareerCoach Security <onboarding@resend.dev>',
       to: targetEmail,
       subject: `Your CareerCoach Verification Code: ${otp}`,
       html: `
@@ -62,18 +51,22 @@ export const sendOTPEmail = async (targetEmail, otp) => {
           <div style="padding: 32px; text-align: center;">
             <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Verify your email address</h2>
             <p style="color: #4b5563; font-size: 15px; margin-bottom: 32px;">Please use the following 6-digit verification code to complete your registration. This code is valid for 5 minutes.</p>
-            
+
             <div style="background-color: #f9fafb; border: 1px dashed #cbd5e1; padding: 16px; border-radius: 12px; margin-bottom: 32px;">
               <span style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #6A0DAD;">${otp}</span>
             </div>
-            
+
             <p style="color: #9ca3af; font-size: 13px; margin: 0;">If you didn't request this code, you can safely ignore this email.</p>
           </div>
         </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (error) {
+      console.error("Failed to send OTP email:", error);
+      return false;
+    }
+
     return true;
   } catch (error) {
     console.error("Failed to send OTP email:", error);
