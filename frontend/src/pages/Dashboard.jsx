@@ -115,7 +115,6 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError("");
-        
 const response = await api.get(`/api/upload/history/${currentUser.uid}`);
         if (response.data.success) {
           const formatted = response.data.data.map((item) => ({
