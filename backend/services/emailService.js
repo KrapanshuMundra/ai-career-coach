@@ -8,12 +8,13 @@ dotenv.config();
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
-  secure: false, // STARTTLS, not SSL
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
   connectionTimeout: 15000,
+  family: 4, // Force IPv4, avoids Render's broken IPv6 routing
 });
 
 // 2. Verify connection on startup
