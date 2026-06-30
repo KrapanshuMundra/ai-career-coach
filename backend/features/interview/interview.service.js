@@ -21,12 +21,13 @@ export const processChat = async (history, message, userId) => {
 export const generateAndSendReport = async (history, userEmail, atsScore) => {
   const reportData = await generateInterviewReport(history);
   
-  if (userEmail) {
-    // Dispatch email asynchronously without holding up the return statement
-    sendReportEmail(userEmail, reportData, atsScore).catch(err => 
-      console.error("Non-fatal error: Email dispatch failed in background:", err)
-    );
-  }
+  // Email sending disable for now 
+  // if (userEmail) {
+  //   // Dispatch email asynchronously without holding up the return statement
+  //   sendReportEmail(userEmail, reportData, atsScore).catch(err => 
+  //     console.error("Non-fatal error: Email dispatch failed in background:", err)
+  //   );
+  // }
   
   return reportData;
 };

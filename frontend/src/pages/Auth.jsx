@@ -15,10 +15,6 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // NEW: OTP States
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const [otp, setOtp] = useState("");
-
   const { login, signup } = useAuth();
   const navigate = useNavigate();
 
@@ -28,63 +24,49 @@ export default function Auth() {
     setPassword("");
     setPasswordConfirm("");
     setShowPassword(false);
-    setShowOtpInput(false); // Reset OTP state on toggle
-    setOtp("");
   };
 
   async function handleSubmit(e) {
     e.preventDefault();
-    
-    if (!isLogin && !showOtpInput && password !== passwordConfirm) {
+
+    if (!isLogin && password !== passwordConfirm) {
       return setError("Passwords do not match");
     }
 
     try {
       setError("");
       setLoading(true);
-      
+
       // =========================================
       // FLOW 1: STANDARD LOGIN
       // =========================================
       if (isLogin) {
         await login(email, password);
         navigate("/evaluator");
-      } 
+      }
       // =========================================
-      // FLOW 2: SIGNUP - REQUEST OTP
-      // =========================================
-      else if (!showOtpInput) {
-        await api.post("/api/auth/send-otp", { email });
-        setShowOtpInput(true); // Switch UI to OTP mode
-      } 
-      // =========================================
-      // FLOW 3: SIGNUP - VERIFY OTP & REGISTER
+      // FLOW 2: SIGNUP - DIRECT (NO OTP)
       // =========================================
       else {
-        // 1. Verify OTP with Backend
-        await api.post("/api/auth/verify-otp", { email, otp });
-
-        // 2. Create Firebase Account
+        // 1. Create Firebase Account
         const userCredential = await signup(email, password);
         const userId = userCredential?.user?.uid;
 
-        // 3. Sync with MongoDB
+        // 2. Sync with MongoDB
         if (userId) {
           await api.post("/api/auth/register", {
-  userId,
-  email,
-  password,
-});
+            userId,
+            email,
+            password,
+          });
         }
         navigate("/evaluator");
       }
     } catch (err) {
-      if (!isLogin && !showOtpInput) {
-        setError("Failed to send verification code. Ensure your email is correct.");
-      } else if (!isLogin && showOtpInput) {
-        setError(err.response?.data?.message || "Invalid or expired OTP.");
-      } else {
+      if (isLogin) {
         setError("Failed to log in: Incorrect credentials.");
+      } else {
+        setError(err.response?.data?.message || "Failed to create account. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -163,11 +145,11 @@ export default function Auth() {
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 lg:p-12 bg-gray-50/50 dark:bg-black transition-colors duration-300 font-['Inter',sans-serif]">
       <div className="w-full max-w-[1100px] bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-zinc-800 flex overflow-hidden relative lg:h-[650px] transition-colors duration-300">
-        
+
         {/* LEFT COLUMN: The Auth Forms */}
         <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 sm:px-12 py-12 relative z-10 bg-white dark:bg-zinc-900 transition-colors duration-300">
           <div className="w-full max-w-[380px]">
-            
+
             {/* Brand Logo */}
             <div className="flex items-center gap-2 mb-8">
               <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-[#6A0DAD] dark:text-purple-400 flex items-center justify-center transition-colors duration-300">
@@ -182,12 +164,12 @@ export default function Auth() {
               <motion.div key={isLogin ? "login" : "signup"} initial="hidden" animate="visible" exit="exit" variants={fadeUp}>
                 <div className="mb-6">
                   <h2 className="text-3xl font-extrabold text-black dark:text-white tracking-tight transition-colors duration-300">
-                    {isLogin ? "Welcome back" : (showOtpInput ? "Verify Email" : "Create Account")}
+                    {isLogin ? "Welcome back" : "Create Account"}
                   </h2>
                   <p className="text-gray-500 dark:text-zinc-400 text-sm mt-1.5 font-medium transition-colors duration-300">
-                    {isLogin 
-                      ? "Please enter your details to access your dashboard." 
-                      : (showOtpInput ? `We sent a 6-digit code to ${email}` : "Join to start optimizing your resume with AI.")}
+                    {isLogin
+                      ? "Please enter your details to access your dashboard."
+                      : "Join to start optimizing your resume with AI."}
                   </p>
                 </div>
 
@@ -199,89 +181,58 @@ export default function Auth() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  
-                  {/* --- CONDITIONAL RENDER: ONLY SHOW EMAIL/PASS IF OTP NOT REQUESTED --- */}
-                  {!showOtpInput && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                      <div>
-                        <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase transition-colors duration-300">Email</label>
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
-                          placeholder="name@example.com"
-                        />
-                      </div>
 
-                      <div>
-                        <div className="flex justify-between items-center mb-1.5">
-                          <label className="block text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase transition-colors duration-300">Password</label>
-                          {isLogin && <a href="#" className="text-[10px] font-bold text-[#6A0DAD] dark:text-purple-400 hover:underline">Forgot?</a>}
-                        </div>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                    <div>
+                      <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase transition-colors duration-300">Email</label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
+                        placeholder="name@example.com"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="relative flex items-center">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
+                          placeholder="Enter your password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 text-gray-400 dark:text-zinc-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors flex items-center justify-center focus:outline-none"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            {showPassword ? "visibility" : "visibility_off"}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {!isLogin && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                        <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase mt-4 transition-colors duration-300">Confirm Password</label>
                         <div className="relative flex items-center">
                           <input
                             type={showPassword ? "text" : "password"}
                             required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            value={passwordConfirm}
+                            onChange={(e) => setPasswordConfirm(e.target.value)}
                             className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
-                            placeholder="Enter your password"
+                            placeholder="Confirm your password"
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 text-gray-400 dark:text-zinc-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors flex items-center justify-center focus:outline-none"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">
-                              {showPassword ? "visibility" : "visibility_off"}
-                            </span>
-                          </button>
                         </div>
-                      </div>
-
-                      {!isLogin && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                          <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase mt-4 transition-colors duration-300">Confirm Password</label>
-                          <div className="relative flex items-center">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              required
-                              value={passwordConfirm}
-                              onChange={(e) => setPasswordConfirm(e.target.value)}
-                              className="w-full p-3 pr-10 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-medium text-sm shadow-sm"
-                              placeholder="Confirm your password"
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-
-                  {/* --- CONDITIONAL RENDER: ONLY SHOW OTP IF REQUESTED --- */}
-                  {showOtpInput && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      <label className="block mb-1.5 text-[10px] font-bold text-gray-500 dark:text-zinc-400 tracking-widest uppercase mt-2 transition-colors duration-300">6-Digit Code</label>
-                      <input
-                        type="text"
-                        required
-                        maxLength="6"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} // Only allow numbers
-                        className="w-full p-4 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 text-black dark:text-white placeholder:text-gray-300 dark:placeholder:text-zinc-600 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-[#6A0DAD]/30 focus:border-[#6A0DAD] outline-none transition-all font-black text-2xl tracking-[0.5em] text-center shadow-sm"
-                        placeholder="••••••"
-                      />
-                      <div className="flex justify-between items-center mt-3">
-                        <button type="button" onClick={() => setShowOtpInput(false)} className="text-[11px] font-bold text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-white transition-colors">
-                          &larr; Use a different email
-                        </button>
-                        <button type="button" onClick={() => api.post("/api/auth/send-otp", { email })} className="text-[11px] font-bold text-[#6A0DAD] dark:text-purple-400 hover:underline">
-                          Resend Code
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
+                      </motion.div>
+                    )}
+                  </motion.div>
 
                   <button
                     disabled={loading}
@@ -297,7 +248,7 @@ export default function Auth() {
                         Processing...
                       </>
                     ) : (
-                      isLogin ? "Sign In" : (showOtpInput ? "Verify & Register" : "Continue with Email")
+                      isLogin ? "Sign In" : "Create Account"
                     )}
                   </button>
                 </form>

@@ -5,7 +5,6 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
@@ -42,11 +41,6 @@ export function AuthProvider({ children }) {
   // 🚀 PRO SAAS FEATURES
   // ==========================================
 
-  // Allows users to reset their forgotten passwords
-  function resetPassword(email) {
-    return sendPasswordResetEmail(auth, email);
-  }
-
   // One-click Google Login (Requires Google Auth enabled in Firebase Console)
   function loginWithGoogle() {
     const provider = new GoogleAuthProvider();
@@ -72,7 +66,6 @@ export function AuthProvider({ children }) {
     login,
     signup,
     logout,
-    resetPassword,
     loginWithGoogle
   };
 
