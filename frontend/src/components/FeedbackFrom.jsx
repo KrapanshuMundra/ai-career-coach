@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/api';
 
 export default function FeedbackForm() {
   const { currentUser } = useAuth();
@@ -29,7 +30,7 @@ export default function FeedbackForm() {
     setError('');
 
     try {
-      await axios.post('http://localhost:5000/api/reviews/submit', {
+      await api.post('/api/reviews/submit', {
         userId: currentUser?.uid || "anonymous",
         rating: rating,
         comment: comment

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import api from "../utils/api";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -54,7 +54,7 @@ export default function Auth() {
       // FLOW 2: SIGNUP - REQUEST OTP
       // =========================================
       else if (!showOtpInput) {
-        await axios.post("http://localhost:5000/api/auth/send-otp", { email });
+        await api.post("/api/auth/send-otp", { email });
         setShowOtpInput(true); // Switch UI to OTP mode
       } 
       // =========================================
@@ -62,7 +62,7 @@ export default function Auth() {
       // =========================================
       else {
         // 1. Verify OTP with Backend
-        await axios.post("http://localhost:5000/api/auth/verify-otp", { email, otp });
+        await api.post("/api/auth/verify-otp", { email, otp });
 
         // 2. Create Firebase Account
         const userCredential = await signup(email, password);
@@ -70,11 +70,11 @@ export default function Auth() {
 
         // 3. Sync with MongoDB
         if (userId) {
-          await axios.post("http://localhost:5000/api/auth/register", {
-            userId: userId,
-            email: email,
-            password: password,
-          });
+          await api.post("/api/auth/register", {
+  userId,
+  email,
+  password,
+});
         }
         navigate("/evaluator");
       }
@@ -276,7 +276,7 @@ export default function Auth() {
                         <button type="button" onClick={() => setShowOtpInput(false)} className="text-[11px] font-bold text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-white transition-colors">
                           &larr; Use a different email
                         </button>
-                        <button type="button" onClick={() => axios.post("http://localhost:5000/api/auth/send-otp", { email })} className="text-[11px] font-bold text-[#6A0DAD] dark:text-purple-400 hover:underline">
+                        <button type="button" onClick={() => api.post("/api/auth/send-otp", { email })} className="text-[11px] font-bold text-[#6A0DAD] dark:text-purple-400 hover:underline">
                           Resend Code
                         </button>
                       </div>

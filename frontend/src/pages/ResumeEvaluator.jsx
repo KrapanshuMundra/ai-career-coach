@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
-
+import api from "../utils/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SCORE RING
@@ -163,8 +163,8 @@ const ResumeEvaluator = ({ onEvaluationComplete, onEvaluationReset }) => {
 
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/upload/evaluate",
+      const response = await api.post(
+        "/api/upload/evaluate",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

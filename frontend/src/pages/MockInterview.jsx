@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
+import api from "../utils/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DIMENSION SCORE BAR — used in the report breakdown
@@ -182,11 +182,11 @@ export default function MockInterview({ isResumeReady }) {
     setInput("");
     setIsLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/interview/chat", {
-        history: messages,
-        message: input,
-        userId: currentUser.uid,
-      });
+       const response = await api.post("/api/interview/chat", {
+      history: messages,
+      message: input,
+      userId: currentUser.uid,
+    });
       setMessages([...newMessages, { role: "ai", content: response.data.data }]);
     } catch {
       setMessages([...newMessages, { role: "ai", content: "Connection lost. Please try again in a moment." }]);
@@ -215,11 +215,11 @@ export default function MockInterview({ isResumeReady }) {
     setIsGeneratingReport(true);
     try {
       const savedAtsScore = sessionStorage.getItem("careercoach_ats_score") || "N/A";
-      const response = await axios.post("http://localhost:5000/api/interview/report", {
-        history: messages,
-        userEmail: currentUser.email,
-        atsScore: savedAtsScore,
-      });
+      const response = await api.post("/api/interview/report", {
+      history: messages,
+      userEmail: currentUser.email,
+      atsScore: savedAtsScore,
+    });
       setReport(response.data);
       setIsInterviewFinished(true);
     } catch {

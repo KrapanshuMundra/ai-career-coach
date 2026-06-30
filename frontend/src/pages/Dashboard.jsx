@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-
+import api from "../utils/api";
 
 const KeywordChip = ({ word, priority }) => {
   const isHigh = priority === "high";
@@ -115,8 +115,8 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError("");
-        const baseUrl  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-        const response = await axios.get(`${baseUrl}/api/upload/history/${currentUser.uid}`);
+        
+const response = await api.get(`/api/upload/history/${currentUser.uid}`);
         if (response.data.success) {
           const formatted = response.data.data.map((item) => ({
             id:              item._id,
