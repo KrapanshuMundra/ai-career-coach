@@ -24,7 +24,6 @@ export default function App() {
   // Starts as TRUE so the loader shows immediately during application boot
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation(); 
-  const hideNavbar = location.pathname === "/login" || location.pathname === "/signup";
 
   // Flag tracking to verify a resume evaluation occurred in the active lifecycle
   const [isResumeEvaluated, setIsResumeEvaluated] = useState(() => {
@@ -59,7 +58,7 @@ export default function App() {
         transition={{ duration: 0.3 }}
         className="flex flex-col flex-grow"
       >
-        {!hideNavbar && <Navbar />}
+        <Navbar />
 
         {/* Main Content Area */}
         <main className="flex-grow">
